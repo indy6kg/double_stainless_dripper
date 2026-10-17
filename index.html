@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ダブルステンレスドリッパー タイマー</title>
+<style>
+:root{
+  --bg:#fffbee;--card:#ffffff;--ink:#2d2a26;--sub:#8a8174;--line:#ffe2b0;--accent:#ef6c00;--accent-ink:#fff;--done:#c8c0b2;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;padding:16px;max-width:480px;margin-inline:auto}
+h1{font-size:15px;margin:4px 0 14px;color:var(--sub);font-weight:600;text-align:center}
+.timer{text-align:center;background:linear-gradient(180deg,#fff4d6,#ffffff);box-shadow:0 4px 14px rgba(255,160,40,.18);border:1px solid var(--line);border-radius:20px;padding:18px 12px}
+.time{font-size:76px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-1px;line-height:1}
+.water{margin-top:8px;font-size:14px;color:var(--sub)}
+.water b{font-size:22px;color:var(--ink)}
+.now{margin-top:14px;background:var(--card);border:2px solid var(--accent);border-radius:20px;padding:16px}
+.now small{color:var(--sub);font-size:12px}
+.now .act{font-size:26px;font-weight:700;margin:4px 0}
+.now .note{font-size:13px;color:var(--sub);min-height:1.2em}
+.next{margin-top:10px;display:flex;justify-content:space-between;align-items:center;font-size:14px;padding-top:10px;border-top:1px dashed var(--line)}
+.next .cd{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent)}
+.bar{height:6px;background:var(--line);border-radius:3px;margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent)}
+.btns{display:flex;gap:10px;margin:14px 0}
+button{font:inherit;border:0;border-radius:16px;padding:18px 0;font-size:20px;font-weight:700;cursor:pointer}
+#go{flex:3;background:var(--accent);color:var(--accent-ink)}
+#reset{flex:1;background:var(--card);color:var(--ink);border:1px solid var(--line)}
+ol{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+li{display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);align-items:baseline}
+li:last-child{border-bottom:0}
+li .t{width:44px;font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent)}
+li .d{flex:1;font-size:14px}
+li .d span{display:block;font-size:12px;color:var(--sub)}
+li.done{color:var(--done)}li.done .t,li.done .d span{color:var(--done)}
+li.cur{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.foot{font-size:12px;color:var(--sub);text-align:center;margin:12px 0 4px}
+</style>
+</head>
+<body>
+<h1>ダブルステンレスドリッパー ／ 粕谷哲メソッド</h1>
+<div class="timer">
+  <div class="time" id="time">0:00</div>
+  <div class="water">注ぐ目標 <b id="water">—</b> ml</div>
+</div>
+<div class="now">
+  <small id="lbl">準備OK：注ぎ始める前にスタート</small>
+  <div class="act" id="act">30ml 注いで蒸らす</div>
+  <div class="note" id="note">最初の湯を注ぐ直前にスタートを押します</div>
+  <div class="next"><span id="nx">次：—</span><span class="cd" id="cd">0:30</span></div>
+  <div class="bar"><i id="bar"></i></div>
+</div>
+<div class="btns"><button id="go">スタート</button><button id="reset">リセット</button></div>
+<ol id="list"></ol>
+<div class="foot" id="wl">タイマー中は画面スリープを防止します</div>
+<script>
+var STEPS=[
+ {t:0,  act:"30ml 注いで蒸らす", to:30,  note:"蒸らし30秒程度"},
+ {t:30, act:"30ml 注ぐ（計60ml）", to:60,  note:"30秒待つ"},
+ {t:60, act:"30ml 注ぐ（計90ml）", to:90,  note:"30秒待つ"},
+ {t:90, act:"180ml まで注ぐ", to:180, note:"なるべく真ん中だけに注ぐ"},
+ {t:120,act:"280ml まで注ぐ", to:280, note:"なるべく真ん中だけに注ぐ"},
+ {t:210,act:"ドリッパーを外す", to:280, note:"目安：220〜240ml が出来上がり量", end:true}
+];
+var $=function(i){return document.getElementById(i)};
+var fmt=function(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+var fmtT=function(s){return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+var list=$("list");
+STEPS.forEach(function(s,i){
+  var li=document.createElement("li");li.id="s"+i;
+  li.innerHTML='<div class="t">'+fmtT(s.t)+'</div><div class="d">'+s.act+'<span>'+s.note+'</span></div>';
+  list.appendChild(li);
+});
+var running=false,startAt=0,base=0,raf=0,lastIdx=-1,wake=null,ac=null,finished=false;
+function makeWav(f,n){
+  var sr=22050,td=0.18,gap=0.08,total=Math.ceil((n*td+(n-1)*gap+0.05)*sr);
+  var buf=new ArrayBuffer(44+total*2),v=new DataView(buf);
+  function w(o,s){for(var i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))}
+  w(0,'RIFF');v.setUint32(4,36+total*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,total*2,true);
+  for(var i=0;i<total;i++){
+    var t=i/sr,k=Math.floor(t/(td+gap)),l=t-k*(td+gap),s=0;
+    if(k<n&&l<td){s=Math.sin(2*Math.PI*f*t)*0.7*Math.min(1,l/0.01,(td-l)/0.03)}
+    v.setInt16(44+i*2,Math.round(s*32767),true);
+  }
+  var b=new Uint8Array(buf),str='';
+  for(var j=0;j<b.length;j++)str+=String.fromCharCode(b[j]);
+  var a=new Audio('data:audio/wav;base64,'+btoa(str));
+  a.preload='auto';a.setAttribute('playsinline','');
+  return a;
+}
+var SND={1:makeWav(880,1),2:makeWav(880,2),3:makeWav(660,3)},primed=false;
+function prime(){
+  if(primed)return;primed=true;
+  [2,3].forEach(function(k){
+    var a=SND[k];a.muted=true;
+    var p=a.play();
+    var done=function(){a.pause();a.currentTime=0;a.muted=false};
+    if(p&&p.then){p.then(done,function(){a.muted=false;primed=false})}else{done()}
+  });
+}
+function beep(f,d,n){
+  var a=SND[n];
+  if(a){try{a.muted=false;a.currentTime=0;var p=a.play();if(p&&p.catch)p.catch(function(){})}catch(e){}}
+}
+function beepOld(f,d,n){
+  try{
+    if(!ac)return;
+    for(var k=0;k<n;k++){
+      var o=ac.createOscillator(),g=ac.createGain(),t0=ac.currentTime+k*(d+0.08);
+      o.frequency.value=f;o.connect(g);g.connect(ac.destination);
+      g.gain.setValueAtTime(0.0001,t0);g.gain.exponentialRampToValueAtTime(0.4,t0+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t0+d);
+      o.start(t0);o.stop(t0+d+0.02);
+    }
+  }catch(e){}
+}
+async function lock(){
+  try{
+    if("wakeLock" in navigator){
+      wake=await navigator.wakeLock.request("screen");
+      $("wl").textContent="画面スリープ防止：オン";
+      wake.addEventListener("release",function(){wake=null});
+    }else{$("wl").textContent="この環境では画面スリープ防止が使えません（iOS 16.4以降が必要）"}
+  }catch(e){$("wl").textContent="画面スリープ防止を有効にできませんでした"}
+}
+async function unlock(){
+  try{if(wake){await wake.release()}}catch(e){}
+  wake=null;$("wl").textContent="タイマー中は画面スリープを防止します";
+}
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="visible"&&running&&!wake)lock();
+});
+function render(el){
+  $("time").textContent=fmtT(Math.floor(el));
+  var idx=0;
+  for(var i=0;i<STEPS.length;i++){if(el>=STEPS[i].t)idx=i}
+  var s=STEPS[idx];
+  if(idx!==lastIdx){
+    if(lastIdx!==-1&&running){beep(s.end?660:880,0.18,s.end?3:2)}
+    lastIdx=idx;
+    for(var j=0;j<STEPS.length;j++){
+      var li=$("s"+j);li.className=j<idx?"done":(j===idx?"cur":"");
+    }
+    $("lbl").textContent="いまの手順 "+(idx+1)+" / "+STEPS.length;
+    $("act").textContent=s.act;$("note").textContent=s.note;
+    $("water").textContent=s.end?"完了":s.to;
+    if(s.end&&running){finished=true}
+  }
+  var nx=STEPS[idx+1];
+  if(nx){
+    $("nx").textContent="次："+nx.act;$("cd").textContent=fmt(nx.t-el);
+    $("bar").style.width=Math.min(100,(el-s.t)/(nx.t-s.t)*100)+"%";
+  }else{
+    $("nx").textContent="目安 220〜240ml";$("cd").textContent="完了";$("bar").style.width="100%";
+  }
+}
+function tick(){
+  var el=base+(Date.now()-startAt)/1000;
+  render(el);
+  if(running)raf=requestAnimationFrame(tick);
+}
+$("go").onclick=function(){
+  prime();
+  try{if(ac&&ac.state==="suspended")ac.resume()}catch(e){}
+  if(!running){
+    running=true;startAt=Date.now();lock();
+    $("go").textContent="一時停止";beep(880,0.12,1);tick();
+  }else{
+    base+=(Date.now()-startAt)/1000;
+    running=false;cancelAnimationFrame(raf);unlock();
+    $("go").textContent="再開";
+  }
+};
+$("reset").onclick=function(){
+  running=false;cancelAnimationFrame(raf);base=0;lastIdx=-1;finished=false;unlock();
+  $("go").textContent="スタート";
+  $("lbl").textContent="準備OK：注ぎ始める前にスタート";
+  $("note").textContent="最初の湯を注ぐ直前にスタートを押します";
+  render(0);
+  $("lbl").textContent="準備OK：注ぎ始める前にスタート";
+  $("note").textContent="最初の湯を注ぐ直前にスタートを押します";
+};
+render(0);
+$("lbl").textContent="準備OK：注ぎ始める前にスタート";
+$("note").textContent="最初の湯を注ぐ直前にスタートを押します";
+</script>
+</body>
+</html>
