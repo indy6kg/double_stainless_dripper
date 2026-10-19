@@ -6,15 +6,18 @@
 <title>ダブルステンレスドリッパー タイマー</title>
 <style>
 :root{
-  --bg:#eef6ff;--card:#ffffff;--ink:#0f2540;--sub:#5b7391;--line:#cfe3fb;--accent:#1e6fe8;--accent-ink:#fff;--done:#a9bdd4;
-  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#fff5e8;--card:#fffdf9;--ink:#3a2418;--sub:#8a6f5c;--line:#f3d9b8;--accent:#d2601a;--accent-ink:#fff;--done:#cdb9a4;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(env(safe-area-inset-bottom,0px)*0.5);
   color-scheme:light;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
 body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;padding:8px 14px;max-width:480px;margin-inline:auto;display:flex;flex-direction:column;gap:8px;overflow:hidden}
 h1{font-size:12px;margin:0;color:var(--sub);font-weight:600;text-align:center}
-.timer{text-align:center;background:linear-gradient(180deg,#dcecff,#ffffff);box-shadow:0 4px 14px rgba(30,111,232,.18);border:1px solid var(--line);border-radius:18px;padding:10px 8px}
+.spec{display:flex;gap:8px;justify-content:center}
+.spec span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12px;color:var(--sub)}
+.spec b{color:var(--ink);font-size:14px}
+.timer{text-align:center;background:linear-gradient(180deg,#ffe6c4,#fffdf9);box-shadow:0 4px 14px rgba(210,96,26,.18);border:1px solid var(--line);border-radius:18px;padding:10px 8px}
 .time{font-size:64px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-1px;line-height:1}
 .water{margin-top:4px;font-size:13px;color:var(--sub)}
 .water b{font-size:20px;color:var(--ink)}
@@ -30,8 +33,8 @@ h1{font-size:12px;margin:0;color:var(--sub);font-weight:600;text-align:center}
 button{font:inherit;border:0;border-radius:14px;padding:13px 0;font-size:18px;font-weight:700;cursor:pointer}
 #go{flex:3;background:var(--accent);color:var(--accent-ink)}
 #reset{flex:1;background:var(--card);color:var(--ink);border:1px solid var(--line)}
-ol{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow-y:auto;flex:1 1 0;min-height:0}
-li{display:flex;gap:10px;padding:7px 12px;border-bottom:1px solid var(--line);align-items:baseline}
+ol{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow-y:auto;flex:1 1 0;min-height:0;display:flex;flex-direction:column}
+li{display:flex;gap:10px;padding:7px 12px;border-bottom:1px solid var(--line);align-items:center;flex:1 0 auto}
 li:last-child{border-bottom:0}
 li .t{width:40px;font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent);font-size:14px}
 li .d{flex:1;font-size:13px}
@@ -43,6 +46,7 @@ li.cur{background:color-mix(in srgb,var(--accent) 12%,transparent)}
 </head>
 <body>
 <h1>ダブルステンレスドリッパー ／ 粕谷哲メソッド</h1>
+<div class="spec"><span>コーヒー粉 <b>20g</b></span><span>出来上がり <b>220〜240ml</b></span></div>
 <div class="timer">
   <div class="time" id="time">0:00</div>
   <div class="water">注ぐ目標 <b id="water">—</b> ml</div>
